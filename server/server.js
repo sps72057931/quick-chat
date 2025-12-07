@@ -7,59 +7,52 @@ import userRouter from "./routes/userRoutes.js";
 import messageRouter from "./routes/messageRoutes.js";
 import { Server } from "socket.io";
 
-// Create Express app and HTTP server
 const app = express();
+
+// Create HTTP server
 const server = http.createServer(app);
 
-// Initialize socket.io server
+// Create Socket.io server
 export const io = new Server(server, {
   cors: { origin: "*" },
 });
 
-// Store online users
+// Track online users
 export const userSocketMap = {}; // { userId: socketId }
 
-// Socket.io connection handler
 io.on("connection", (socket) => {
   const userId = socket.handshake.query.userId;
-  console.log("User Connected", userId);
+  console.log("User Connected:", userId);
 
   if (userId) userSocketMap[userId] = socket.id;
 
-  // Emit online users to all connected clients
   io.emit("getOnlineUsers", Object.keys(userSocketMap));
 
   socket.on("disconnect", () => {
-    console.log("User Disconnected", userId);
+    console.log("User Disconnected:", userId);
     delete userSocketMap[userId];
     io.emit("getOnlineUsers", Object.keys(userSocketMap));
   });
 });
 
-// Middleware setup
-app.use(express.json({ limit: "4mb" }));
+// Middleware
 app.use(cors());
+app.use(express.json({ limit: "4mb" }));
 
-// Routes setup
-app.get("/", (req, res) => {
-  res.send("Welcome to Quick Chat API");
-});
-app.use("/api/status", (req, res) => res.send("Server is live"));
-
+// Routes
+app.get("/", (req, res) => res.send("Welcome to Quick Chat API"));
+app.get("/api/status", (req, res) => res.send("Server is live"));
 app.use("/api/auth", userRouter);
 app.use("/api/messages", messageRouter);
 
-// Connect to MongoDB
+// Connect DB
 await connectDB();
 
-if (process.env.NODE_ENV !== "production") {
-  const PORT = process.env.PORT || 5000;
-  server.listen(PORT, () =>
-    console.log(
-      `Server is running on PORT: ${PORT} => http://localhost:${PORT}/api/status`
-    )
-  );
-}
+// IMPORTANT: Always listen on Render's PORT
+const PORT = process.env.PORT || 5000;
 
-// Export server for Vercel
+server.listen(PORT, () => {
+  console.log(`🚀 Server running on PORT: ${PORT}`);
+});
+
 export default server;
