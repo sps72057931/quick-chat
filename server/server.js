@@ -39,9 +39,16 @@ io.on("connection", (socket) => {
 app.use(cors());
 app.use(express.json({ limit: "4mb" }));
 
-// Routes
-app.get("/", (req, res) => res.send("Welcome to Quick Chat API"));
+// ---- ROUTES ----
+
+// 🔥 Redirect backend root → frontend live URL
+app.get("/", (req, res) => {
+  res.redirect("https://quick-chat-frontend-nfc9.onrender.com");
+});
+
+// Keep status route for checking server health
 app.get("/api/status", (req, res) => res.send("Server is live"));
+
 app.use("/api/auth", userRouter);
 app.use("/api/messages", messageRouter);
 
