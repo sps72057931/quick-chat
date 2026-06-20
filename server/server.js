@@ -14,7 +14,10 @@ const server = http.createServer(app);
 
 // Create Socket.io server
 export const io = new Server(server, {
-  cors: { origin: "*" },
+  cors: {
+    origin: "https://quickchat-frontend-jrka.onrender.com",
+    methods: ["GET", "POST"]
+  },
 });
 
 // Track online users
@@ -36,17 +39,18 @@ io.on("connection", (socket) => {
 });
 
 // Middleware
-app.use(cors());
+app.use(cors({
+  origin: "https://quickchat-frontend-jrka.onrender.com",
+  methods: ["GET", "POST", "PUT", "DELETE"]
+}));
 app.use(express.json({ limit: "4mb" }));
 
 // ---- ROUTES ----
 
-// 🔥 Redirect backend root → frontend live URL
 app.get("/", (req, res) => {
-  res.redirect("https://quick-chat-frontend-nfc9.onrender.com");
+  res.redirect("https://quickchat-frontend-jrka.onrender.com");
 });
 
-// Keep status route for checking server health
 app.get("/api/status", (req, res) => res.send("Server is live"));
 
 app.use("/api/auth", userRouter);
@@ -55,7 +59,6 @@ app.use("/api/messages", messageRouter);
 // Connect DB
 await connectDB();
 
-// IMPORTANT: Always listen on Render's PORT
 const PORT = process.env.PORT || 5000;
 
 server.listen(PORT, () => {
